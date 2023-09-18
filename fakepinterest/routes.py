@@ -39,7 +39,9 @@ def perfildousuario(id_usuario):
         if form_foto.validate_on_submit():
             arquivo = form_foto.foto.data
             nome_seguro = secure_filename(arquivo.filename) #garantir que o nome do arquivo nao tenha caracteres zuados
-            caminho_arquivo = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/fotos_post", nome_seguro)#salvar o arquivo na pasta
+            caminho_arquivo = os.path.join(os.path.abspath(os.path.dirname(__file__)), 
+                                           app.config["UPLOAD_FOLDER"], 
+                                           nome_seguro)#salvar o arquivo na pasta
             arquivo.save(caminho_arquivo)
             foto = Foto(imagem=nome_seguro, id_usuario=current_user.id) #registrar no banco de dados
             database.session.add(foto)
@@ -54,3 +56,9 @@ def perfildousuario(id_usuario):
 def logout():
     logout_user()
     return redirect(url_for("homepage"))
+
+@app.route('/feed')
+@login_required
+def feed():
+    fotos = Foto.query.order_by(Foto.data_criacao.desc()).all()[:20] #selecionar todas as fotos no banco de dados em ordem de data de criação (max 20 fotos)
+    return render_template("feed.html", fotos=fotos)
